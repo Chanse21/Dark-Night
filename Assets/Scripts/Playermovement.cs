@@ -4,43 +4,109 @@ using UnityEngine;
 
 public class Playermovement : MonoBehaviour
 {
-    public float movespeed = 5f;
-    Rigidbody rb;
-    // Start is called before the first frame update
+
+    public float moveSpeed = 5f;
+
+    public float rotationSpeed = 10f;
+
+    public Transform cameraTransform; // assign your camera here
+
+    public Transform lightTransform;  // assign your light here
+
+
+
+    private Rigidbody rb;
+
+
+
     void Start()
+
     {
+
         rb = GetComponent<Rigidbody>();
+
+        rb.freezeRotation = true; // prevent tipping over
+
     }
 
-    // Update is called once per frame
-   void FixedUpdate() // Use FixedUpdate for physics
 
-{
-    Vector3 moveDirection = Vector3.zero;
 
-    if (Input.GetKey("d"))
+    void FixedUpdate()
+
     {
-        moveDirection += Vector3.right;
-    }
 
-    if (Input.GetKey("a"))
+        // get input
+
+        float horizontal = Input.GetAxisRaw("Horizontal");
+
+        float vertical = Input.GetAxisRaw("Vertical");
+
+
+
+        Vector3 inputDir = new Vector3(horizontal, 0f, vertical).normalized;
+
+
+
+        if (inputDir.magnitude >= 0.1f)
+
+        {
+
+            // get camera-relative movement direction
+
+            Vector3 camForward = cameraTransform.forward;
+
+            Vector3 camRight = cameraTransform.right;
+
+            camForward.y = 0f;
+
+            camRight.y = 0f;
+
+            camForward.Normalize();
+
+            camRight.Normalize();
+
+
+
+            Vector3 moveDir = camForward * inputDir.z + camRight * inputDir.x;
+
+
+
+            // rotate player toward move direction
+
+            Quaternion targetRotation = Quaternion.LookRotation(moveDir);
+
+            rb.MoveRotation(Quaternion.Slerp(rb.rotation, targetRotation, rotationSpeed * Time.fixedDeltaTime));
+
+
+
+            // move player
+
+            rb.MovePosition(rb.position + moveDir * moveSpeed * Time.fixedDeltaTime);
+
+
+
+            // rotate light to match movement direction
+
+            if (lightTransform != null)
+
+            {
+
+                Quaternion lightRotation = Quaternion.LookRotation(moveDir);
+
+                lightTransform.rotation = lightRotation;
+
+            }
+
+        }
+
+    }
+    private void OnCollisionEnter(Collision collision)
     {
-        moveDirection += Vector3.left;
+        if (collision.gameObject.CompareTag("Enemy"))
+        {
+            Destroy(gameObject);
+        }
     }
 
-    if (Input.GetKey("w"))
-    {
-        moveDirection += Vector3.forward;
-    }
-
-    if (Input.GetKey("s"))
-    {
-        moveDirection += Vector3.back;
-    }
-
-    // Normalize to prevent faster diagonal movement
-    moveDirection.Normalize();
-    // Move using physics
-    rb.MovePosition(rb.position + moveDirection * movespeed * Time.fixedDeltaTime);
-  }
 }
+

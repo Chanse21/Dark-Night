@@ -4,33 +4,30 @@ using UnityEngine;
 
 public class Cameramovement : MonoBehaviour
 {
-    public float sensX;
-    public float sensY;
 
-    public Transform orientation;
+    public Transform target; // player
 
-    float xRotation;
-    float yRotation;
+    public Vector3 offset = new Vector3(0, 3, -5);
 
-    private void Start()
+    public float smoothSpeed = 10f;
+
+
+
+    void LateUpdate()
+
     {
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
+
+        Vector3 desiredPosition = target.position + offset;
+
+        transform.position = Vector3.Lerp(transform.position, desiredPosition, smoothSpeed * Time.deltaTime);
+
+
+
+        // always look at player
+
+        transform.LookAt(target.position + Vector3.up * 1.5f); // adjust height if needed
+
     }
 
-    private void Update()
-    {
-        //get mouse input
-        float mouseX = Input.GetAxisRaw("Mouse X") * Time.deltaTime * sensX;
-        float mouseY = Input.GetAxisRaw("Mouse Y") * Time.deltaTime * sensY;
-
-        yRotation += mouseX;
-
-        xRotation -= mouseY;
-        xRotation = Mathf.Clamp(xRotation, -90f, 90f);
-
-        //rotate cam and orienyation
-        transform.rotation = Quaternion.Euler(xRotation, yRotation, 0);
-        orientation.rotation = Quaternion.Euler(0, yRotation, 0);
-    }
 }
+
